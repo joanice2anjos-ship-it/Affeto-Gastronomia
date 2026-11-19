@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#18462c">
+  <meta name="description" content="Conte à Affeto Gastronomia Funcional como foi sua experiência.">
+  <title>Pesquisa de satisfação | Affeto</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <header class="site-header"><div class="shell header-inner">
+    <div class="brand"><span class="logo-slot" data-logo hidden></span><span><strong>Affeto</strong><small>Gastronomia Funcional</small></span></div>
+    <span class="header-note">Rio do Sul · SC</span>
+  </div></header>
+  <main class="shell survey-layout">
+    <section class="surface survey-card" id="survey">
+      <div id="intro">
+        <div class="eyebrow"><span></span> Pesquisa de satisfação</div>
+        <h1 id="screen-title">Queremos ouvir você <span class="heart">💚</span></h1>
+        <p class="intro-copy">A Affeto reúne diferentes opções de gastronomia funcional e saudável para fazer parte da sua rotina: almoço, cafeteria, lanches, confeitaria e produtos para levar para casa. Queremos entender melhor a sua experiência conosco.</p>
+        <p class="time-note"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>A pesquisa é rápida e leva menos de 2 minutos.</p>
+        <button class="primary" id="start" type="button">Iniciar pesquisa <span aria-hidden="true">→</span></button>
+      </div>
+      <form id="questions" aria-labelledby="question-title" hidden novalidate>
+        <div class="progress-line"><span id="progress-text"></span><progress id="progress" max="6" aria-label="Progresso da pesquisa"></progress></div>
+        <h2 id="question-title" tabindex="-1"></h2>
+        <p id="question-hint" class="muted"></p>
+        <div id="options" role="group" aria-labelledby="question-title" aria-describedby="question-hint"></div>
+        <p id="survey-error" class="error" role="status"></p>
+        <div class="actions">
+          <button type="button" class="secondary" id="back">← Voltar</button>
+          <button type="submit" class="primary" id="continue">Continuar</button>
+        </div>
+      </form>
+      <div id="thanks" hidden>
+        <div class="eyebrow"><span></span> Pesquisa concluída</div>
+        <h2 id="thanks-title" tabindex="-1">Obrigada por compartilhar sua experiência 💚</h2>
+        <p class="intro-copy">Sua opinião nos ajuda a construir uma Affeto cada vez melhor.</p>
+      </div>
+    </section>
+    <aside class="brand-art" aria-hidden="true"><i></i><i></i><i></i></aside>
+  </main>
+  <footer class="shell site-footer"><span>Affeto Gastronomia Funcional</span><span>Pesquisa anônima</span></footer>
+  <script type="module" src="./js/survey.js"></script>
+</body>
+</html>

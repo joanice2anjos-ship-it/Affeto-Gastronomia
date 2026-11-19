@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Painel da pesquisa | Affeto</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header class="site-header"><div class="shell header-inner">
+    <div class="brand"><span class="logo-slot" data-logo hidden></span><span><strong>Affeto</strong><small>Gastronomia Funcional</small></span></div>
+    <a class="header-note" href="../">Voltar à pesquisa</a>
+  </div></header>
+  <main class="shell admin-main">
+    <section class="surface login-card" id="login" aria-labelledby="login-title">
+      <h1 id="login-title">Painel da pesquisa</h1>
+      <form id="login-form">
+        <label>E-mail<input name="email" type="email" autocomplete="username" required></label>
+        <label>Senha<input name="password" type="password" autocomplete="current-password" required></label>
+        <p id="login-status" class="error" role="status"></p>
+        <button class="primary" type="submit">Entrar</button>
+      </form>
+    </section>
+    <section id="dashboard" hidden aria-labelledby="dashboard-title">
+      <div class="dashboard-heading">
+        <h1 id="dashboard-title" tabindex="-1">Resultados da pesquisa</h1>
+        <div class="actions"><button class="secondary" id="logout">Sair</button><button class="primary" id="export">Exportar CSV</button></div>
+      </div>
+      <div class="surface metric"><span>Total de respostas</span><strong id="total"></strong></div>
+      <div id="charts" class="chart-grid"></div>
+      <section class="surface report" id="crossings" hidden><h2>Cruzamentos</h2><p class="muted">Grupos com pelo menos cinco respostas. Cada resposta pode contar em até duas opções.</p><div id="crossing-content"></div></section>
+      <section class="surface report"><h2>Sugestões recebidas</h2><div id="suggestions"></div></section>
+    </section>
+  </main>
+  <script type="module" src="../js/admin.js"></script>
+</body>
+</html>
