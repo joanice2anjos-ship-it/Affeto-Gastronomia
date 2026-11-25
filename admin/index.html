@@ -7,7 +7,7 @@
   <title>Painel da pesquisa | Affeto</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
-<body>
+<body class="admin-page">
   <header class="site-header"><div class="shell header-inner">
     <div class="brand"><span class="logo-slot" data-logo hidden></span><span><strong>Affeto</strong><small>Gastronomia Funcional</small></span></div>
     <a class="header-note" href="../">Voltar à pesquisa</a>
@@ -29,7 +29,16 @@
       </div>
       <section class="surface management" aria-label="Controle da pesquisa">
         <p id="survey-status" class="status-label" role="status">Verificando disponibilidade…</p>
-        <button class="secondary" id="toggle-survey" disabled>Pausar pesquisa</button>
+        <form id="status-form" class="period-controls">
+          <label>Status da pesquisa
+            <select id="status-selection" disabled>
+              <option value="active">Ativa</option>
+              <option value="paused">Pausada</option>
+              <option value="finalized">Finalizada</option>
+            </select>
+          </label>
+          <button class="secondary" id="save-status" disabled>Salvar status</button>
+        </form>
         <p class="error" id="survey-status-error" role="status"></p>
       </section>
       <section class="surface management" aria-label="Período e exportação">
@@ -49,7 +58,6 @@
         </div>
         <div class="actions export-actions">
           <button class="primary" id="export-excel">Exportar Excel (.xlsx)</button>
-          <button class="secondary" id="export-csv">Exportar CSV</button>
         </div>
         <p class="error" id="period-error" role="status"></p>
       </section>
@@ -59,7 +67,13 @@
         <div class="surface metric"><span>Principal frequência de consumo</span><strong id="top-frequency" class="metric-text"></strong></div>
         <div class="surface metric"><span>Principal fator para consumir mais</span><strong id="top-motivation" class="metric-text"></strong></div>
       </div>
-      <div id="charts" class="chart-grid"></div>
+      <section aria-labelledby="charts-title">
+        <div class="charts-heading">
+          <h2 id="charts-title">Distribuição das respostas</h2>
+          <p class="muted">As barras mostram o percentual de participantes do período que selecionou cada alternativa.</p>
+        </div>
+        <div id="charts" class="chart-grid"></div>
+      </section>
       <section class="surface report" id="crossings" hidden><h2>Cruzamentos</h2><p class="muted">Grupos com pelo menos cinco respostas. Cada resposta pode contar em até duas opções.</p><div id="crossing-content"></div></section>
       <section class="surface report"><h2>Comentários dos clientes</h2><div id="suggestions"></div></section>
     </section>

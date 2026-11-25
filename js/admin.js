@@ -1,8 +1,8 @@
 import { api, showLogo } from './api.js';
 import { questions } from './questions.js';
-import { surveyStatus } from './survey-status.js';
+import { surveyStatus, updateSurveyStatus } from './survey-status.js';
 import { brazilianDate, localDay, periodStart } from './report-data.js';
-import { csvFile, download, excelFile } from './report-export.js';
+import { download, excelFile } from './report-export.js';
 
 const byId = id => document.getElementById(id);
 const login = byId('login-form');
@@ -10,14 +10,16 @@ const status = byId('login-status');
 const fields = ['id', ...questions.map(question => question.key), 'created_at'];
 const percent = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 1 });
 const positiveOptions = questions[0].options.slice(0, 3);
-const toggleSurvey = byId('toggle-survey');
+const statusForm = byId('status-form');
+const statusSelection = byId('status-selection');
+const saveStatus = byId('save-status');
 const period = byId('period');
 const from = byId('date-from');
 const to = byId('date-to');
 let rows = [];
 let visibleRows = [];
 let sessionToken;
-let active;
+let currentStatus;
 let expires;
 void showLogo();
 
@@ -80,7 +82,7 @@ function applyPeriod() {
     return (!start || day >= start) && (!end || day <= end);
   });
   byId('period-error').textContent = invalid ? 'Informe as datas inicial e final em ordem cronológica.' : '';
-  byId('export-excel').disabled = byId('export-csv').disabled = !visibleRows.length;
+  byId('export-excel').disabled = !visibleRows.length;
   renderMetrics();
   renderCharts();
   renderCrossings();
@@ -94,15 +96,33 @@ function renderCharts() {
   const charts = questions.slice(0, 5).map((question, index) => {
     const section = element('section', undefined, 'surface report');
     const list = element('ul', undefined, 'chart');
-    for (const [option, count] of countOptions(visibleRows, question)) {
-      const item = element('li');
-      const label = element('div', undefined, 'bar-label');
-      label.append(element('span', option), element('strong', count));
-      const bar = element('progress');
-      bar.max = visibleRows.length || 1;
-      bar.value = count;
-      bar.setAttribute('aria-label', option);
-      item.append(label, bar);
+    for (const [optionIndex, [option, count]] of [...countOptions(visibleRows, question)].entries()) {
+      const item = element('li', undefined, 'chart-item');
+      const button = element('button', undefined, 'chart-option');
+      button.type = 'button';
+      const share = visibleRows.length ? count / visibleRows.length : 0;
+      const label = element('span', undefined, 'bar-label');
+      label.append(element('span', option), element('strong', percent.format(share)));
+      const track = element('span', undefined, 'chart-track');
+      track.setAttribute('aria-hidden', 'true');
+      const fill = element('span', undefined, 'chart-fill');
+      fill.style.width = (share * 100) + '%';
+      track.append(fill);
+
+      const tooltip = element('span', `${count} de ${visibleRows.length} participantes`, 'chart-tooltip');
+      tooltip.id = `chart-${index}-${optionIndex}`;
+      tooltip.setAttribute('role', 'tooltip');
+      button.setAttribute('aria-describedby', tooltip.id);
+      button.append(label, track);
+      button.addEventListener('click', () => {
+        item.classList.remove('tooltip-dismissed');
+        button.focus();
+      });
+      button.addEventListener('keydown', event => {
+        if (event.key === 'Escape') item.classList.add('tooltip-dismissed');
+      });
+      button.addEventListener('blur', () => item.classList.remove('tooltip-dismissed'));
+      item.append(button, tooltip);
       list.append(item);
     }
     section.append(element('h2', titles[index]), list);
@@ -216,19 +236,27 @@ function closeDashboard(message) {
 
 byId('logout').addEventListener('click', () => closeDashboard(''));
 
+const statusLabels = {
+  active: 'Pesquisa ativa',
+  paused: 'Pesquisa pausada',
+  finalized: 'Pesquisa finalizada',
+};
+
 function setSurveyStatus(value) {
-  active = value;
+  currentStatus = value;
   const label = byId('survey-status');
-  label.dataset.status = value === undefined ? 'unknown' : value ? 'active' : 'paused';
-  label.textContent = value === undefined ? 'Status indisponível' : value ? 'Pesquisa ativa' : 'Pesquisa pausada';
-  toggleSurvey.textContent = value === undefined ? 'Verificar status' : value ? 'Pausar pesquisa' : 'Reativar pesquisa';
-  toggleSurvey.disabled = !sessionToken;
+  label.dataset.status = value ?? 'unknown';
+  label.textContent = statusLabels[value] ?? 'Status indisponível';
+  statusSelection.value = value ?? '';
+  statusSelection.disabled = !value || !sessionToken;
+  saveStatus.textContent = value ? 'Salvar status' : 'Verificar status';
+  saveStatus.disabled = !sessionToken || Boolean(value);
 }
 
 async function loadSurveyStatus(token) {
   const error = byId('survey-status-error');
   error.textContent = '';
-  toggleSurvey.disabled = true;
+  statusSelection.disabled = saveStatus.disabled = true;
   try {
     const value = await surveyStatus();
     if (sessionToken === token) setSurveyStatus(value);
@@ -239,22 +267,25 @@ async function loadSurveyStatus(token) {
   }
 }
 
-toggleSurvey.addEventListener('click', async () => {
-  if (!sessionToken || toggleSurvey.disabled) return;
+statusSelection.addEventListener('change', () => {
+  saveStatus.disabled = statusSelection.value === currentStatus;
+});
+
+statusForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!sessionToken || saveStatus.disabled) return;
   const token = sessionToken;
-  if (active === undefined) {
+  if (!currentStatus) {
     await loadSurveyStatus(token);
     return;
   }
 
   const error = byId('survey-status-error');
   error.textContent = '';
-  toggleSurvey.disabled = true;
+  const requestedStatus = statusSelection.value;
+  statusSelection.disabled = saveStatus.disabled = true;
   try {
-    const value = await surveyStatus({
-      method: 'PATCH', token, body: { active: !active },
-      headers: { Prefer: 'return=representation' },
-    });
+    const value = await updateSurveyStatus(requestedStatus, token);
     if (sessionToken === token) setSurveyStatus(value);
   } catch {
     if (sessionToken !== token) return;
@@ -265,7 +296,4 @@ toggleSurvey.addEventListener('click', async () => {
 
 byId('export-excel').addEventListener('click', () => {
   if (sessionToken && visibleRows.length) download(excelFile(visibleRows), 'xlsx');
-});
-byId('export-csv').addEventListener('click', () => {
-  if (sessionToken && visibleRows.length) download(csvFile(visibleRows), 'csv');
 });

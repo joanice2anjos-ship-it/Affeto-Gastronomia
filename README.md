@@ -13,7 +13,8 @@ A página inicial apresenta seis perguntas sobre a experiência na Affeto. A sex
 1. No projeto novo, abra **SQL Editor** e clique em **New query**.
 2. Abra o arquivo [supabase/setup.sql](supabase/setup.sql) deste repositório. Copie seu conteúdo inteiro para o editor e clique em **Run** uma vez.
 3. Execute também [supabase/survey-status.sql](supabase/survey-status.sql) em uma nova consulta para habilitar o controle de disponibilidade.
-4. Em **Table Editor**, procure a tabela `responses_affeto`. Ela deve estar vazia.
+4. Execute [supabase/survey-finalized.sql](supabase/survey-finalized.sql) em uma nova consulta para habilitar o status finalizada.
+5. Em **Table Editor**, procure a tabela `responses_affeto`. Ela deve estar vazia.
 
 O SQL limita os valores aceitos, exige de uma a duas opções nas perguntas 3 e 5, e configura as permissões. O público pode inserir. Uma conta autenticada precisa da marca administrativa para consultar. A data é preenchida pelo banco.
 
@@ -49,7 +50,7 @@ A URL e a chave pública ficam visíveis no navegador por definição. A senha d
 2. No navegador, acesse `http://localhost:8000/`. Confirme os enunciados das seis perguntas. Tente avançar sem preencher cada uma das cinco primeiras, voltar e avançar de novo, marcar três itens nas perguntas 3 e 5 e digitar mais de 300 caracteres na pergunta 6.
 3. Envie uma resposta com a última pergunta em branco. Tente clicar duas vezes rapidamente no botão final e confirme a tela de agradecimento.
 4. No Supabase, abra **Table Editor → responses_affeto**. Confira que a resposta aparece uma única vez, com as opções escolhidas e a data. Envie uma segunda resposta com sugestão se quiser conferir a lista de comentários.
-5. Abra `http://localhost:8000/admin/`. Confirme que a página começa no login. Teste a senha errada, entre com a conta administradora e confira o total, os gráficos, a data da sugestão e o botão **Exportar CSV**. Abra o CSV e confira os registros. Os cruzamentos aparecem quando pelo menos um grupo de frequência tem cinco respostas.
+5. Abra `http://localhost:8000/admin/`. Confirme que a página começa no login. Teste a senha errada, entre com a conta administradora e confira o total, os gráficos, a data da sugestão e o botão **Exportar Excel (.xlsx)**. Abra a planilha e confira os registros. Os cruzamentos aparecem quando pelo menos um grupo de frequência tem cinco respostas.
 6. Teste a largura de celular usando o modo responsivo das ferramentas de desenvolvedor do navegador. Em uma janela anônima, abra novamente `/admin/` e confirme que os resultados exigem login. Para conferir uma conta comum, crie outro usuário de teste no painel do Supabase e deixe o campo `affeto_admin` ausente. Essa conta deve receber a mensagem de acesso negado.
 
 Para verificar as permissões de visitante sem tocar nos dados, use o **SQL Editor**. Execute este bloco inteiro e confira que as três colunas retornam `false`:
@@ -86,7 +87,7 @@ for (const method of ['GET', 'PATCH', 'DELETE']) {
 
 ## Uso e manutenção
 
-O Excel e o CSV incluem as respostas do período selecionado. Os campos de múltipla escolha ficam na mesma célula, separados por ` | `, e as datas usam o horário de Brasília. Os períodos de 7 e 30 dias incluem o dia atual. No período personalizado, as duas datas são inclusivas. Trate os comentários e arquivos exportados como dados de acesso restrito. A sessão do painel é mantida na memória da página e termina ao sair, recarregar ou atingir o tempo de expiração.
+O Excel inclui as respostas do período selecionado. Os campos de múltipla escolha ficam na mesma célula, separados por ` | `, e as datas usam o horário de Brasília. Os períodos de 7 e 30 dias incluem o dia atual. No período personalizado, as duas datas são inclusivas. Trate os comentários e arquivos exportados como dados de acesso restrito. A sessão do painel é mantida na memória da página e termina ao sair, recarregar ou atingir o tempo de expiração.
 
 O questionário não pede dados pessoais. A inserção é pública, como exige uma pesquisa anônima. O identificador evita duplicação por cliques e retentativas do mesmo envio. Se a pesquisa passar a receber spam, avalie proteção contra automação no servidor antes de ampliar a divulgação.
 
@@ -98,3 +99,8 @@ No projeto atual da Affeto, abra **SQL Editor → New query**, cole todo o conte
 A migração cria uma tabela com um único registro, inicialmente ativo. Visitantes e contas autenticadas podem consultar a disponibilidade. Somente administradores com `affeto_admin = true` podem mudar o status pelo painel. Um gatilho na tabela de respostas recusa novas inserções enquanto a pesquisa está pausada, inclusive de formulários abertos antes da pausa. As respostas existentes e suas políticas de acesso são preservadas.
 
 Depois de publicar a versão autorizada, entre no painel, pause a pesquisa e abra seu link público em outra aba. Confirme a mensagem de pausa, reative a pesquisa e recarregue a aba pública para confirmar a reabertura.
+
+
+### Status finalizada
+
+Em uma instalação com o controle de pausa já ativo, execute apenas [supabase/survey-finalized.sql](supabase/survey-finalized.sql) antes de publicar esta versão. A migração preserva o status anterior e acrescenta a possibilidade de encerrar a coleta. No painel, escolha **Ativa**, **Pausada** ou **Finalizada** e clique em **Salvar status**. As duas últimas opções bloqueiam novos envios; a opção **Ativa** reabre a pesquisa.

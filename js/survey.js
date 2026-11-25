@@ -18,20 +18,21 @@ void showLogo();
 const startButton = byId('start');
 const retryAvailability = byId('retry-availability');
 
-function showPaused(focus = false) {
+function showUnavailable(status, focus = false) {
   startButton.disabled = true;
   byId('intro').hidden = true;
   form.hidden = true;
-  byId('paused').hidden = false;
-  if (focus) byId('paused-title').focus();
+  byId(status).hidden = false;
+  if (focus) byId(status + '-title').focus();
 }
 
 async function checkAvailability() {
   retryAvailability.hidden = true;
   byId('availability-error').textContent = '';
   try {
-    if (await surveyStatus()) startButton.disabled = false;
-    else showPaused();
+    const status = await surveyStatus();
+    if (status === 'active') startButton.disabled = false;
+    else showUnavailable(status);
   } catch {
     byId('availability-error').textContent = 'Não foi possível verificar a disponibilidade da pesquisa.';
     retryAvailability.hidden = false;
@@ -151,7 +152,8 @@ form.addEventListener('submit', async event => {
     byId('thanks').hidden = false;
     byId('thanks-title').focus();
   } catch (failure) {
-    if (failure.code === 'AF001') showPaused(true);
+    if (failure.code === 'AF001') showUnavailable('paused', true);
+    else if (failure.code === 'AF002') showUnavailable('finalized', true);
     else error.textContent = 'Não foi possível enviar agora. Suas respostas continuam aqui. Tente novamente.';
   } finally {
     sending = false;

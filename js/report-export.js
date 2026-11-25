@@ -1,5 +1,5 @@
 import { questions } from './questions.js';
-import { brazilianDate, timeParts } from './report-data.js';
+import { timeParts } from './report-data.js';
 import { workbook } from './xlsx.js';
 
 const headers = [
@@ -12,21 +12,10 @@ function answers(row) {
   return questions.map(({ key, multiple }) => multiple ? row[key].join(' | ') : row[key] ?? '');
 }
 
-function csvCell(text) {
-  const safe = /^[\t\r\n]|^[\s\uFEFF]*[=+\-@]/u.test(text) ? "'" + text : text;
-  return '"' + safe.replaceAll('"', '""') + '"';
-}
-
 function excelDate(timestamp) {
   const { day, month, year, hour, minute } = timeParts(timestamp);
   const milliseconds = Date.parse(`${year}-${month}-${day}T${hour}:${minute}:00Z`);
   return milliseconds / 86400000 + 25569;
-}
-
-export function csvFile(rows) {
-  const values = [headers, ...rows.map(row => [...answers(row), brazilianDate(row.created_at)])];
-  const csv = values.map(row => row.map(csvCell).join(';')).join('\r\n');
-  return new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' });
 }
 
 export function excelFile(rows) {

@@ -148,3 +148,70 @@ tbody th { font-weight: 500; }
   .metrics { gap: 8px; }
   .metrics .metric { padding-inline: 11px; }
 }
+
+/* Shared visual hierarchy for the public survey and the dashboard. */
+.site-header { background: #fffef8; }
+.brand { min-width: 0; }
+.logo-slot img { width: auto; height: auto; max-width: min(155px, 42vw); max-height: 80px; }
+.admin-page .logo-slot img { max-height: 64px; }
+.surface { box-shadow: 0 4px 18px #203c2710; }
+.public-survey .survey-card { border-top: 3px solid #66885c; }
+.public-survey .survey-layout:has(#intro[hidden]) { margin-top: clamp(24px, 5vw, 58px); }
+.instagram-copy { margin-top: 16px; color: var(--muted); line-height: 1.6; max-width: 46ch; }
+.instagram-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 20px; text-decoration: none; }
+.instagram-link span { margin-left: auto; padding-left: 5px; }
+
+.admin-main { padding-top: clamp(26px, 5vw, 54px); }
+.admin-main .dashboard-heading { align-items: center; }
+.management { align-items: center; }
+.metrics { gap: clamp(8px, 2vw, 16px); }
+.metrics .metric { border-top: 3px solid #84a37a; }
+.metric > span { display: block; color: var(--muted); font-size: .86rem; font-weight: 650; line-height: 1.35; }
+.metric strong { font-variant-numeric: tabular-nums; }
+.status-label[data-status="finalized"]::before { background: #746044; }
+.charts-heading { margin: 28px 0 14px; }
+.charts-heading h2 { margin-bottom: 6px; }
+.chart-item { position: relative; }
+.chart-option {
+  display: block;
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+.chart-option:hover, .chart-option:focus { background: #f0f4ea; border-color: #d6e1cf; }
+.chart-option .bar-label { align-items: baseline; margin-bottom: 7px; }
+.chart-option strong { color: var(--green); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.chart-track, .chart-fill { display: block; height: 7px; border-radius: 8px; }
+.chart-track { background: #e3eadc; }
+.chart-fill { background: #517d51; }
+.chart-option:hover .chart-fill, .chart-option:focus .chart-fill { background: #28603b; }
+.chart-tooltip {
+  position: absolute;
+  right: 6px;
+  bottom: calc(100% - 3px);
+  z-index: 1;
+  width: max-content;
+  max-width: 100%;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: #204c31;
+  color: #fff;
+  font-size: .78rem;
+  opacity: 0;
+  pointer-events: none;
+}
+.chart-item:not(.tooltip-dismissed):hover .chart-tooltip,
+.chart-item:not(.tooltip-dismissed):focus-within .chart-tooltip { opacity: 1; }
+
+@media (max-width: 480px) {
+  .management { padding: 14px; }
+  .management > form { width: 100%; }
+  .chart-option { padding-inline: 4px; }
+  .brand strong { font-size: 26px; }
+  .public-survey .logo-slot img { max-height: 66px; }
+  .public-survey .brand-art { min-height: 130px; }
+}
