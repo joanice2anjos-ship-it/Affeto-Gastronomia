@@ -103,3 +103,48 @@ tbody th { font-weight: 500; }
   .brand-art i:nth-child(3) { width: 75%; left: 15%; }
   .chart-grid { grid-template-columns: 1fr; }
 }
+
+#retry-availability { margin-top: 12px; }
+.management {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 15px;
+  padding: 16px 22px;
+}
+.management .error:empty { display: none; }
+.management .error { flex-basis: 100%; margin-top: 0; }
+.status-label { align-self: center; display: flex; align-items: center; gap: 10px; font-weight: 700; }
+.status-label::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: #687568; }
+.status-label[data-status="active"]::before { background: #438541; }
+.status-label[data-status="paused"]::before { background: #b1483b; }
+.period-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; min-width: 0; }
+.period-controls label { display: grid; gap: 5px; color: var(--muted); font-size: .85rem; font-weight: 650; }
+.period-controls select, .period-controls input {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 8px;
+  border: 1px solid #abb9a6;
+  border-radius: 8px;
+  background: white;
+  color: var(--green);
+  font: inherit;
+}
+.export-actions { flex-wrap: wrap; justify-content: flex-start; }
+.metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; margin-bottom: 15px; }
+.metrics .metric { margin: 0; padding: 17px 19px; }
+.metric small { display: block; color: var(--muted); margin-top: 4px; }
+.metric .metric-text { font-size: 1.12rem; line-height: 1.35; overflow-wrap: anywhere; margin-top: 9px; }
+#suggestions { display: grid; gap: 10px; }
+#suggestions .suggestion { border: 1px solid var(--line); border-radius: 9px; background: #fafbf5; padding: 12px 14px; }
+
+@media (max-width: 850px) {
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 420px) {
+  .management { padding-inline: 16px; }
+  .metrics { gap: 8px; }
+  .metrics .metric { padding-inline: 11px; }
+}

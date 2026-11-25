@@ -1,12 +1,23 @@
 import { api, showLogo } from './api.js';
 import { questions } from './questions.js';
+import { surveyStatus } from './survey-status.js';
+import { brazilianDate, localDay, periodStart } from './report-data.js';
+import { csvFile, download, excelFile } from './report-export.js';
 
 const byId = id => document.getElementById(id);
 const login = byId('login-form');
 const status = byId('login-status');
 const fields = ['id', ...questions.map(question => question.key), 'created_at'];
-const date = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Sao_Paulo' });
+const percent = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 1 });
+const positiveOptions = questions[0].options.slice(0, 3);
+const toggleSurvey = byId('toggle-survey');
+const period = byId('period');
+const from = byId('date-from');
+const to = byId('date-to');
 let rows = [];
+let visibleRows = [];
+let sessionToken;
+let active;
 let expires;
 void showLogo();
 
@@ -40,18 +51,55 @@ function countOptions(entries, question) {
   return counts;
 }
 
+function leadingOption(question) {
+  const counts = [...countOptions(visibleRows, question)];
+  const maximum = Math.max(...counts.map(([, count]) => count));
+  if (!maximum) return '—';
+  const leaders = counts.filter(([, count]) => count === maximum).map(([option]) => option);
+  return leaders.length === 1 ? leaders[0] : 'Empate (' + leaders.length + ' opções)';
+}
+
+function renderMetrics() {
+  const total = visibleRows.length;
+  const positives = visibleRows.filter(row => positiveOptions.includes(row.experience)).length;
+  byId('total').textContent = total;
+  byId('positive').textContent = total ? percent.format(positives / total) : '—';
+  byId('top-frequency').textContent = leadingOption(questions[1]);
+  byId('top-motivation').textContent = leadingOption(questions[4]);
+}
+
+function applyPeriod() {
+  const custom = period.value === 'custom';
+  byId('custom-period').hidden = !custom;
+  const today = localDay(new Date());
+  const start = custom ? from.value : period.value === 'all' ? '' : periodStart(today, Number(period.value));
+  const end = custom ? to.value : period.value === 'all' ? '' : today;
+  const invalid = custom && (!start || !end || start > end || !from.validity.valid || !to.validity.valid);
+  visibleRows = invalid ? [] : rows.filter(row => {
+    const day = localDay(new Date(row.created_at));
+    return (!start || day >= start) && (!end || day <= end);
+  });
+  byId('period-error').textContent = invalid ? 'Informe as datas inicial e final em ordem cronológica.' : '';
+  byId('export-excel').disabled = byId('export-csv').disabled = !visibleRows.length;
+  renderMetrics();
+  renderCharts();
+  renderCrossings();
+  renderSuggestions();
+}
+
+for (const input of [period, from, to]) input.addEventListener('change', applyPeriod);
+
 function renderCharts() {
-  byId('total').textContent = rows.length;
   const titles = ['Experiência geral', 'Frequência de consumo', 'Opções mais utilizadas', 'Alimentação saudável e sabor', 'O que aumentaria a frequência'];
   const charts = questions.slice(0, 5).map((question, index) => {
     const section = element('section', undefined, 'surface report');
     const list = element('ul', undefined, 'chart');
-    for (const [option, count] of countOptions(rows, question)) {
+    for (const [option, count] of countOptions(visibleRows, question)) {
       const item = element('li');
       const label = element('div', undefined, 'bar-label');
       label.append(element('span', option), element('strong', count));
       const bar = element('progress');
-      bar.max = rows.length || 1;
+      bar.max = visibleRows.length || 1;
       bar.value = count;
       bar.setAttribute('aria-label', option);
       item.append(label, bar);
@@ -67,7 +115,7 @@ function renderCrossings() {
   const frequency = questions[1];
   const groups = frequency.options.map(option => ({
     option,
-    entries: rows.filter(row => row.frequency === option),
+    entries: visibleRows.filter(row => row.frequency === option),
   })).filter(group => group.entries.length >= 5);
   const section = byId('crossings');
   section.hidden = groups.length === 0;
@@ -104,15 +152,15 @@ function renderCrossings() {
 }
 
 function renderSuggestions() {
-  const suggestions = rows.filter(row => row.suggestion);
+  const suggestions = visibleRows.filter(row => row.suggestion?.trim());
   const items = suggestions.map(row => {
     const item = element('article', undefined, 'suggestion');
-    const timestamp = element('time', date.format(new Date(row.created_at)));
+    const timestamp = element('time', brazilianDate(row.created_at));
     timestamp.dateTime = row.created_at;
     item.append(timestamp, element('p', row.suggestion));
     return item;
   });
-  byId('suggestions').replaceChildren(...(items.length ? items : [element('p', 'Nenhuma sugestão recebida.', 'muted')]));
+  byId('suggestions').replaceChildren(...(items.length ? items : [element('p', 'Nenhum comentário neste período.', 'muted')]));
 }
 
 login.addEventListener('submit', async event => {
@@ -131,9 +179,11 @@ login.addEventListener('submit', async event => {
       return;
     }
     rows = await getResponses(token);
-    renderCharts();
-    renderCrossings();
-    renderSuggestions();
+    sessionToken = token;
+    period.value = 'all';
+    from.value = to.value = '';
+    applyPeriod();
+    void loadSurveyStatus(token);
     byId('login').hidden = true;
     byId('dashboard').hidden = false;
     byId('dashboard-title').focus();
@@ -152,8 +202,12 @@ login.addEventListener('submit', async event => {
 function closeDashboard(message) {
   clearTimeout(expires);
   rows = [];
+  visibleRows = [];
+  sessionToken = undefined;
+  setSurveyStatus(undefined);
+  byId('survey-status-error').textContent = '';
   byId('dashboard').hidden = true;
-  byId('total').textContent = '';
+  for (const id of ['total', 'positive', 'top-frequency', 'top-motivation']) byId(id).textContent = '';
   for (const id of ['charts', 'crossing-content', 'suggestions']) byId(id).replaceChildren();
   byId('login').hidden = false;
   status.textContent = message;
@@ -162,20 +216,56 @@ function closeDashboard(message) {
 
 byId('logout').addEventListener('click', () => closeDashboard(''));
 
-function csvCell(value) {
-  const text = Array.isArray(value) ? value.join(' | ') : String(value ?? '');
-  const protect = /^[\t\r\n]|^[\s\uFEFF]*[=+\-@]/u.test(text) ? "'" + text : text;
-  return '"' + protect.replaceAll('"', '""') + '"';
+function setSurveyStatus(value) {
+  active = value;
+  const label = byId('survey-status');
+  label.dataset.status = value === undefined ? 'unknown' : value ? 'active' : 'paused';
+  label.textContent = value === undefined ? 'Status indisponível' : value ? 'Pesquisa ativa' : 'Pesquisa pausada';
+  toggleSurvey.textContent = value === undefined ? 'Verificar status' : value ? 'Pausar pesquisa' : 'Reativar pesquisa';
+  toggleSurvey.disabled = !sessionToken;
 }
 
-byId('export').addEventListener('click', () => {
-  if (byId('dashboard').hidden) return;
-  const lines = [fields, ...rows.map(row => fields.map(field => row[field]))];
-  const csv = lines.map(line => line.map(csvCell).join(',')).join('\r\n');
-  const url = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' }));
-  const link = element('a');
-  link.href = url;
-  link.download = 'respostas-affeto.csv';
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+async function loadSurveyStatus(token) {
+  const error = byId('survey-status-error');
+  error.textContent = '';
+  toggleSurvey.disabled = true;
+  try {
+    const value = await surveyStatus();
+    if (sessionToken === token) setSurveyStatus(value);
+  } catch {
+    if (sessionToken !== token) return;
+    setSurveyStatus(undefined);
+    error.textContent = 'Não foi possível carregar o status da pesquisa.';
+  }
+}
+
+toggleSurvey.addEventListener('click', async () => {
+  if (!sessionToken || toggleSurvey.disabled) return;
+  const token = sessionToken;
+  if (active === undefined) {
+    await loadSurveyStatus(token);
+    return;
+  }
+
+  const error = byId('survey-status-error');
+  error.textContent = '';
+  toggleSurvey.disabled = true;
+  try {
+    const value = await surveyStatus({
+      method: 'PATCH', token, body: { active: !active },
+      headers: { Prefer: 'return=representation' },
+    });
+    if (sessionToken === token) setSurveyStatus(value);
+  } catch {
+    if (sessionToken !== token) return;
+    setSurveyStatus(undefined);
+    error.textContent = 'Não foi possível confirmar a atualização. Verifique o status antes de tentar novamente.';
+  }
+});
+
+byId('export-excel').addEventListener('click', () => {
+  if (sessionToken && visibleRows.length) download(excelFile(visibleRows), 'xlsx');
+});
+byId('export-csv').addEventListener('click', () => {
+  if (sessionToken && visibleRows.length) download(csvFile(visibleRows), 'csv');
 });

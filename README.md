@@ -12,7 +12,8 @@ A página inicial apresenta seis perguntas sobre a experiência na Affeto. A sex
 
 1. No projeto novo, abra **SQL Editor** e clique em **New query**.
 2. Abra o arquivo [supabase/setup.sql](supabase/setup.sql) deste repositório. Copie seu conteúdo inteiro para o editor e clique em **Run** uma vez.
-3. Em **Table Editor**, procure a tabela `responses_affeto`. Ela deve estar vazia.
+3. Execute também [supabase/survey-status.sql](supabase/survey-status.sql) em uma nova consulta para habilitar o controle de disponibilidade.
+4. Em **Table Editor**, procure a tabela `responses_affeto`. Ela deve estar vazia.
 
 O SQL limita os valores aceitos, exige de uma a duas opções nas perguntas 3 e 5, e configura as permissões. O público pode inserir. Uma conta autenticada precisa da marca administrativa para consultar. A data é preenchida pelo banco.
 
@@ -85,6 +86,15 @@ for (const method of ['GET', 'PATCH', 'DELETE']) {
 
 ## Uso e manutenção
 
-O CSV inclui todas as respostas carregadas ao entrar no painel, com os campos de múltipla escolha separados por ` | `. Trate as sugestões e o arquivo exportado como dados de acesso restrito. A sessão do painel é mantida na memória da página e termina ao sair, recarregar ou atingir o tempo de expiração.
+O Excel e o CSV incluem as respostas do período selecionado. Os campos de múltipla escolha ficam na mesma célula, separados por ` | `, e as datas usam o horário de Brasília. Os períodos de 7 e 30 dias incluem o dia atual. No período personalizado, as duas datas são inclusivas. Trate os comentários e arquivos exportados como dados de acesso restrito. A sessão do painel é mantida na memória da página e termina ao sair, recarregar ou atingir o tempo de expiração.
 
 O questionário não pede dados pessoais. A inserção é pública, como exige uma pesquisa anônima. O identificador evita duplicação por cliques e retentativas do mesmo envio. Se a pesquisa passar a receber spam, avalie proteção contra automação no servidor antes de ampliar a divulgação.
+
+
+### Atualização de uma instalação existente
+
+No projeto atual da Affeto, abra **SQL Editor → New query**, cole todo o conteúdo de [supabase/survey-status.sql](supabase/survey-status.sql) e execute uma vez antes de publicar esta versão. Em uma instalação existente, execute apenas essa migração.
+
+A migração cria uma tabela com um único registro, inicialmente ativo. Visitantes e contas autenticadas podem consultar a disponibilidade. Somente administradores com `affeto_admin = true` podem mudar o status pelo painel. Um gatilho na tabela de respostas recusa novas inserções enquanto a pesquisa está pausada, inclusive de formulários abertos antes da pausa. As respostas existentes e suas políticas de acesso são preservadas.
+
+Depois de publicar a versão autorizada, entre no painel, pause a pesquisa e abra seu link público em outra aba. Confirme a mensagem de pausa, reative a pesquisa e recarregue a aba pública para confirmar a reabertura.

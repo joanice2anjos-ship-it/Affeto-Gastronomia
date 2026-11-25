@@ -25,12 +25,43 @@
     <section id="dashboard" hidden aria-labelledby="dashboard-title">
       <div class="dashboard-heading">
         <h1 id="dashboard-title" tabindex="-1">Resultados da pesquisa</h1>
-        <div class="actions"><button class="secondary" id="logout">Sair</button><button class="primary" id="export">Exportar CSV</button></div>
+        <button class="secondary" id="logout">Sair</button>
       </div>
-      <div class="surface metric"><span>Total de respostas</span><strong id="total"></strong></div>
+      <section class="surface management" aria-label="Controle da pesquisa">
+        <p id="survey-status" class="status-label" role="status">Verificando disponibilidade…</p>
+        <button class="secondary" id="toggle-survey" disabled>Pausar pesquisa</button>
+        <p class="error" id="survey-status-error" role="status"></p>
+      </section>
+      <section class="surface management" aria-label="Período e exportação">
+        <div class="period-controls">
+          <label>Período
+            <select id="period">
+              <option value="all">Todas as respostas</option>
+              <option value="7">Últimos 7 dias</option>
+              <option value="30">Últimos 30 dias</option>
+              <option value="custom">Período personalizado</option>
+            </select>
+          </label>
+          <div id="custom-period" class="period-controls" hidden>
+            <label>De <input id="date-from" type="date"></label>
+            <label>Até <input id="date-to" type="date"></label>
+          </div>
+        </div>
+        <div class="actions export-actions">
+          <button class="primary" id="export-excel">Exportar Excel (.xlsx)</button>
+          <button class="secondary" id="export-csv">Exportar CSV</button>
+        </div>
+        <p class="error" id="period-error" role="status"></p>
+      </section>
+      <div class="metrics" aria-label="Indicadores do período" aria-live="polite">
+        <div class="surface metric"><span>Total de respostas</span><strong id="total"></strong></div>
+        <div class="surface metric"><span>Avaliações positivas</span><strong id="positive"></strong><small>Excelente, Muito boa ou Boa</small></div>
+        <div class="surface metric"><span>Principal frequência de consumo</span><strong id="top-frequency" class="metric-text"></strong></div>
+        <div class="surface metric"><span>Principal fator para consumir mais</span><strong id="top-motivation" class="metric-text"></strong></div>
+      </div>
       <div id="charts" class="chart-grid"></div>
       <section class="surface report" id="crossings" hidden><h2>Cruzamentos</h2><p class="muted">Grupos com pelo menos cinco respostas. Cada resposta pode contar em até duas opções.</p><div id="crossing-content"></div></section>
-      <section class="surface report"><h2>Sugestões recebidas</h2><div id="suggestions"></div></section>
+      <section class="surface report"><h2>Comentários dos clientes</h2><div id="suggestions"></div></section>
     </section>
   </main>
   <script type="module" src="../js/admin.js"></script>

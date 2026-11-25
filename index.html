@@ -20,7 +20,13 @@
         <h1 id="screen-title">Queremos ouvir você <span class="heart">💚</span></h1>
         <p class="intro-copy">A Affeto reúne diferentes opções de gastronomia funcional e saudável para fazer parte da sua rotina: almoço, cafeteria, lanches, confeitaria e produtos para levar para casa. Queremos entender melhor a sua experiência conosco.</p>
         <p class="time-note"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>A pesquisa é rápida e leva menos de 2 minutos.</p>
-        <button class="primary" id="start" type="button">Iniciar pesquisa <span aria-hidden="true">→</span></button>
+        <button class="primary" id="start" type="button" disabled>Iniciar pesquisa <span aria-hidden="true">→</span></button>
+        <p class="error" id="availability-error" role="status"></p>
+        <button class="secondary" id="retry-availability" type="button" hidden>Tentar novamente</button>
+      </div>
+      <div id="paused" hidden>
+        <h2 id="paused-title" tabindex="-1">Pesquisa temporariamente indisponível</h2>
+        <p class="intro-copy">A pesquisa está pausada no momento. Obrigada pelo seu interesse em compartilhar sua experiência com a Affeto.</p>
       </div>
       <form id="questions" aria-labelledby="question-title" hidden novalidate>
         <div class="progress-line"><span id="progress-text"></span><progress id="progress" max="6" aria-label="Progresso da pesquisa"></progress></div>

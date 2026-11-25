@@ -1,4 +1,5 @@
 import { api, showLogo } from './api.js';
+import { surveyStatus } from './survey-status.js';
 import { questions } from './questions.js';
 
 const byId = id => document.getElementById(id);
@@ -13,6 +14,32 @@ const next = byId('continue');
 const back = byId('back');
 
 void showLogo();
+
+const startButton = byId('start');
+const retryAvailability = byId('retry-availability');
+
+function showPaused(focus = false) {
+  startButton.disabled = true;
+  byId('intro').hidden = true;
+  form.hidden = true;
+  byId('paused').hidden = false;
+  if (focus) byId('paused-title').focus();
+}
+
+async function checkAvailability() {
+  retryAvailability.hidden = true;
+  byId('availability-error').textContent = '';
+  try {
+    if (await surveyStatus()) startButton.disabled = false;
+    else showPaused();
+  } catch {
+    byId('availability-error').textContent = 'Não foi possível verificar a disponibilidade da pesquisa.';
+    retryAvailability.hidden = false;
+  }
+}
+
+retryAvailability.addEventListener('click', checkAvailability);
+void checkAvailability();
 
 function render() {
   const { key, title, multiple, options: choices } = questions[index];
@@ -70,7 +97,7 @@ function render() {
   byId('question-title').focus();
 }
 
-byId('start').addEventListener('click', () => {
+startButton.addEventListener('click', () => {
   byId('intro').hidden = true;
   form.hidden = false;
   render();
@@ -90,7 +117,7 @@ back.addEventListener('click', () => {
 
 form.addEventListener('submit', async event => {
   event.preventDefault();
-  if (sending) return;
+  if (sending || form.hidden) return;
   const { key, options: choices } = questions[index];
   if (choices && !answers[key]?.length) {
     error.textContent = 'Escolha uma opção para continuar.';
@@ -123,8 +150,9 @@ form.addEventListener('submit', async event => {
     form.hidden = true;
     byId('thanks').hidden = false;
     byId('thanks-title').focus();
-  } catch {
-    error.textContent = 'Não foi possível enviar agora. Suas respostas continuam aqui. Tente novamente.';
+  } catch (failure) {
+    if (failure.code === 'AF001') showPaused(true);
+    else error.textContent = 'Não foi possível enviar agora. Suas respostas continuam aqui. Tente novamente.';
   } finally {
     sending = false;
     next.disabled = back.disabled = false;
